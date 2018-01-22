@@ -24,7 +24,7 @@ public class Swagger2 {
 //                .pathMapping("/")
 //                .directModelSubstitute(Date.class,String.class)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com"))
+                .apis(RequestHandlerSelectors.basePackage("${package}"))
                 .paths(PathSelectors.any())
                 .build();
     }
