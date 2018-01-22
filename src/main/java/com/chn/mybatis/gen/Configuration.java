@@ -11,10 +11,10 @@ public class Configuration {
     public static final String db_username = "root";
     //密码
     public static final String db_password = "123456";
-    //数据库地址
+    //数据库名称
     public static final String db_sche = "db_bei_diao";
 
-    public static final String GEN_PACKAGE = "com.maiyi.axx"; //生成的包名
+    public static final String GEN_PACKAGE = "com.test"; //生成的包名
 
     public static final String fileName = "test"; //项目名称
 
