@@ -41,8 +41,6 @@ public class Main {
 			generateLog();
 			generateSwagger2();
 			generateDbConfig();
-//			generateDialogInfoHtml(tableName, dbType);
-//			generateDialogUpdateHtml(tableName, dbType);
 		}
 	}
 
