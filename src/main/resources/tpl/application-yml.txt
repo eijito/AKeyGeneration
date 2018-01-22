@@ -1,0 +1,61 @@
+#启动: nohup java  -Dspring.profiles.active=prod  -jar  blueWhale-erp-1.0.jar >  log.erp 2>&1 &
+server:
+  port: 8080
+  compression:
+    enabled: true
+  connection-timeout: 3000
+
+swagger:
+    host: local.dev.com
+
+
+spring:
+#    session:
+#      store-type: none
+  # 环境 dev|test|prod
+    profiles:
+      active: dev
+    application:
+      # passport配置
+      name: test
+      passport:
+        type: test
+        onFuncNull: 1 #未传funcId时,1:拒绝访问;0:随意访问
+        onRoleNull: 0 #funcId未授权任务角色时,1:拒绝访问;0:随意访问
+    redis:
+        host: 192.168.3.60
+        port: 6379
+  #      password: youngo_online_edu
+    passportDs:
+        url: jdbc:mysql://192.168.3.60:3306/db_passport?characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false
+        username: root
+        password: 123456
+        driverClassName : com.mysql.jdbc.Driver
+        test-on-borrow: false
+        test-while-idle: true
+        time-between-eviction-runs-millis: 3600000
+  #      validation-query: SELECT 1
+
+
+logging:
+  level:
+    com:
+      maiyi:
+        spider:
+          dao:  DEBUG
+
+session:
+  domain:
+    name: dev.com
+  cookie:
+    name: YOUNGOPASSPORT
+
+baseServer:
+  sms:
+    verify: http://common.e-youngo.com/sms189/youngo/verifiSms?phone=%s&code=%s
+    templete: http://common.e-youngo.com/sms189/youngo/verifiSms?phone=%s&code=%s
+  wx:
+    signature: http://common.e-youngo.com/angelWx/signature
+    token: http://common.e-youngo.com/angelWx/accessToken
+    grant: http://common.e-youngo.com/angelWx/wapAccessToken/%s
+

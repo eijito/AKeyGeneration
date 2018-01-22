@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>   
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="${package}.dao.${table.upperStartClassName}Dao">
+    <!--The user defined SQL!-->
+
+<% var joinTables = { %>
+<%          for(eachLink in table.links) {
+                var targetTable = eachLink.targetTableTrans; %>
+left join ${targetTable.name } ${targetTable.alias} on ${table.alias}.${eachLink.fromColumnName}=${targetTable.alias}.${eachLink.toColumnName}
+<%           } %>
+<%          for(eachLink in table.linkBys) {
+                var fromTable = eachLink.fromTableTrans; %>
+        left join ${fromTable.name} ${fromTable.alias} on ${table.alias}.${eachLink.toColumnName}=${fromTable.alias}.${eachLink.fromColumnName}
+<%           } %>
+<%           }; %>
+
+<% var colSelect = { %>
+<%             for(column in table.columns) { %>${columnLP.first?"":","}${table.alias}.${column.name} ${column.alias}<%}
+               for(column in table.keys) { %>, ${table.alias}.${column.name} ${column.alias}
+<%             }}; %>
+
+<% var colAlltable = { %>
+<%             for(column in table.columns) { %>${columnLP.first?"":","}${table.alias}.${column.name} ${column.alias}<%}
+               for(column in table.keys) { %>, ${table.alias}.${column.name} ${column.alias}
+<%             }
+               for(eachLink in table.links) {
+                   var targetTable = eachLink.targetTableTrans;  %>
+<%                 for(column in targetTable.columns) { %>
+                , ${targetTable.alias}.${column.name} ${column.alias}
+<%                 }
+                   for(column in targetTable.keys) { %>
+                , ${targetTable.alias}.${column.name} ${column.alias}
+<%                 } %>
+<%              }
+                for(eachLink in table.linkBys) {
+                   var fromTable = eachLink.fromTableTrans;  %>
+<%                 for(column in fromTable.columns) { %>
+                , ${fromTable.alias}.${column.name} ${column.alias}
+<%                 }
+                   for(column in fromTable.keys) { %>
+                , ${fromTable.alias}.${column.name} ${column.alias}
+<%                 } %>
+            <% } %>
+        <% }; %>
+
+<% var updateCase = { %>
+update ${table.name} set
+        <trim prefix="" prefixOverrides=",">
+        <%  for(each in table.beyondColumns) { %>
+        <if test="${each.lowerStartFieldName} != null">, ${each.name} = #{${each.lowerStartFieldName}}</if>
+        <% } %>
+        </trim>
+<% }; %>
+
+<% var allUpdateCase = { %>
+update ${table.name} set
+        <trim prefix="" prefixOverrides=",">
+        <%  for(each in table.columns) { %>
+        <if test="${each.lowerStartFieldName} != null">, ${each.name} = #{${each.lowerStartFieldName}}</if>
+        <% } %>
+        </trim>
+<% }; %>
+
+<% var whereCase = { %>
+    	<where>
+            <% for(each in table.columns) { if("create_time" != each.name){%>
+            <if test="${each.lowerStartFieldName} != null">and ${table.alias}.${each.name} = #{${each.lowerStartFieldName}}</if>
+            <% }} %>
+        </where>
+<% }; %>
+    <!--The user defined SQL!-->
+    <resultMap id="returnEntity" type="${package}.entity.${table.upperStartClassName}">
+    <% for(key in table.keys) { %>
+        <id column="${key.alias}" javaType="${key.javaType}" jdbcType="${key.jdbcType}" property="${key.lowerStartFieldName}"/>
+    <% } %>
+    <% for(column in table.columns) { %>
+        <result column="${column.alias}" javaType="${column.javaType}" jdbcType="${column.jdbcType}" property="${column.lowerStartFieldName}"/>
+    <% } %>
+<%     for(eachLink in table.links) { 
+           var targetTable = eachLink.targetTableTrans; %>
+        <association property="${targetTable.lowerStartClassName}" javaType="${package}.entity.${targetTable.upperStartClassName}">
+        <% for(key in targetTable.keys) { %>
+            <id column="${key.alias}" javaType="${key.javaType}" jdbcType="${key.jdbcType}" property="${key.lowerStartFieldName}"/>
+        <% } %>
+        <% for(column in targetTable.columns) { %>
+            <result column="${column.alias}" javaType="${column.javaType}" jdbcType="${column.jdbcType}" property="${column.lowerStartFieldName}"/>
+        <% } %>
+        </association>
+<%     } %>
+<%     for(eachLink in table.linkBys) {
+           var fromTable = eachLink.fromTableTrans; %>
+        <collection property="${fromTable.lowerStartClassName}List" ofType="${package}.entity.${fromTable.upperStartClassName}">
+        <% for(key in fromTable.keys) { %>
+            <id column="${key.alias}" javaType="${key.javaType}" jdbcType="${key.jdbcType}" property="${key.lowerStartFieldName}"/>
+        <% } %>
+        <% for(column in fromTable.columns) { %>
+            <result column="${column.alias}" javaType="${column.javaType}" jdbcType="${column.jdbcType}" property="${column.lowerStartFieldName}"/>
+        <% } %>
+        </collection>
+<%     } %>
+    </resultMap>
+
+<% if(table.pk != null) { %>
+    <select id="getById" parameterType="${table.pk.javaType}" resultMap="returnEntity">
+        select ${colAlltable}
+        from ${table.name} ${table.alias}
+        ${joinTables}
+        where ${table.alias}.${table.pk.name} = #{${table.pk.lowerStartFieldName}}
+    </select>
+
+    <delete id="deleteById">
+        delete from ${table.name}
+        where ${table.pk.name} in
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="flagBatchId" parameterType="map">
+        ${allUpdateCase}
+        where ${table.pk.name} in
+        <foreach collection="${table.pk.lowerStartFieldName}s" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateByEntity" parameterType="${package}.entity.${table.upperStartClassName}">
+        ${updateCase}
+        where ${table.pk.name} = #{${table.pk.lowerStartFieldName}}
+    </update>
+
+    <update id="batchUpdateByEntity"  parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update book_chapter set
+            <trim prefix="" prefixOverrides=",">
+            <%  for(each in table.beyondColumns) { %>
+                <if test="item.${each.lowerStartFieldName} != null">, ${each.name} = #{item.${each.lowerStartFieldName}}</if>
+            <% } %>
+            </trim>
+            where ${table.pk.name} = #{${table.pk.lowerStartFieldName}}
+        </foreach>
+    </update>
+<% } %>
+
+    <insert id="insert" parameterType="${package}.entity.${table.upperStartClassName}" <% if(table.keys.~size == 1) {%>useGeneratedKeys="true" keyProperty="${table.keys[0].name}" <% } %>>
+    <% if(table.pk != null) { %>
+        <selectKey resultType="${table.pk.javaType}" order="AFTER" keyProperty="${table.pk.lowerStartFieldName}">
+            select LAST_INSERT_ID()
+        </selectKey>
+    <% } %>
+        insert into ${table.name}
+        (
+            <% for(column in table.beyondColumns) { %>${columnLP.first?"":","}${column.name}<% } %>
+        )values(
+            <% for(column in table.beyondColumns) { %>${columnLP.first?"":","}#{${column.lowerStartFieldName}}<% } %>
+        )
+    </insert>
+
+    <insert id="batchInsert"  parameterType="list">
+        insert into ${table.name}
+        (
+            <% for(column in table.beyondColumns) { %>${columnLP.first?"":","}${column.name}<% } %>
+        ) values
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            <% for(column in table.beyondColumns) { %> ${columnLP.first?"":","}#{item.${column.lowerStartFieldName}}<% } %>
+        </foreach>
+    </insert>
+
+    <select id="list" parameterType="map" resultMap="returnEntity">
+        select ${colAlltable}
+        from ${table.name} ${table.alias}
+        ${joinTables}
+        ${whereCase}
+        <if test="orderBy != null">order by #{orderBy}</if>
+        <if test="start != null and length != null">limit #{start}, #{length}</if>
+    </select>
+
+    <select id="count" parameterType="map" resultType="long">
+        select count(1) from ${table.name} ${table.alias}
+        ${whereCase}
+    </select>
+
+    <select id="dict" parameterType="map" resultType="java.util.Map">
+        select <% for(column in table.columns) { %>${columnLP.first?"":","} ${column.name} ${column.lowerStartFieldName}<%}%>
+               <% for(column in table.keys) { %>, ${column.name}  <%}%>
+        from ${table.name} ${table.alias}
+        ${whereCase}
+    </select>
+
+
+<%     for(eachLink in table.linkBys) {
+           var fromTable = eachLink.fromTableTrans; %>
+
+<!--linked table [${fromTable.name}] start-->
+    <select id="linked${fromTable.upperStartClassName}" resultType="long">
+        select count(1) from ${fromTable.name}
+        where ${eachLink.from.name} in
+        <foreach collection="${eachLink.from.lowerStartFieldName}s" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <delete id="deleteLinked${fromTable.upperStartClassName}">
+        delete from ${fromTable.name}
+        where ${eachLink.from.name} in
+        <foreach collection="${eachLink.from.lowerStartFieldName}s" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+<%
+    var anotherCol = null;
+    if(fromTable.pk != null) {
+        anotherCol = fromTable.pk;
+    } else if(fromTable.columns.~size == 2){
+        anotherCol = (eachLink.from.name == fromTable.columns[0].name)?fromTable.columns[1]:fromTable.columns[0];
+    } else if(fromTable.links.~size == 2){
+          anotherCol = (eachLink.from.name == fromTable.links[0].from.name)?fromTable.links[1].from:fromTable.links[0].from;
+      }
+    if(anotherCol != null){
+%>
+
+    <delete id="deleteBeyond${fromTable.upperStartClassName}">
+        delete from ${fromTable.name}
+        where ${eachLink.from.name} = #{${eachLink.from.lowerStartFieldName}} AND ${anotherCol.name} not in
+        <foreach collection="${fromTable.lowerStartClassName}s" index="index" item="item" open="(" separator="," close=")">
+            #{item.${anotherCol.lowerStartFieldName}}
+        </foreach>
+    </delete>
+    <insert id="insert${fromTable.upperStartClassName}IfMiss"  parameterType="list">
+        insert into ${fromTable.name} (<% for(column in fromTable.beyondColumns) { %>${columnLP.first?"":","}${column.name}<% } %>)
+        select <% for(column in fromTable.beyondColumns) { %>${columnLP.first?"":","}${column.name}<% } %> from
+        <foreach collection="list" item="item" index="index" open="(" separator=" union all " close=")" >
+             select <% for(column in fromTable.beyondColumns) { %>${columnLP.first?"":","} #{item.${column.lowerStartFieldName}} ${column.name}<% } %>
+        </foreach> tmp
+        where not exists (select 1 from ${fromTable.name} ${fromTable.alias} where
+            tmp.${eachLink.from.name} = ${fromTable.alias}.${eachLink.from.name} and tmp.${anotherCol.name} = ${fromTable.alias}.${anotherCol.name})
+    </insert>
+    <update id="update${fromTable.upperStartClassName}IfExist"  parameterType="list">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update ${fromTable.name} set
+            <trim prefix="" prefixOverrides=",">
+            <%  for(each in fromTable.beyondColumns) { if(each.name != eachLink.from.name && each.name != anotherCol.name ){%>
+                <if test="item.${each.lowerStartFieldName} != null">, ${each.name} = #{item.${each.lowerStartFieldName}}</if>
+            <% }} %>
+            </trim>
+            where ${eachLink.from.name} = #{item.${eachLink.from.lowerStartFieldName}} and ${anotherCol.name} = #{item.${anotherCol.lowerStartFieldName}}
+        </foreach>
+    </update>
+<%     }%>
+<!--linked table [${fromTable.name}] end-->
+<% } %>
+
+
+</mapper>

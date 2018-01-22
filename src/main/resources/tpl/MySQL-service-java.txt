@@ -1,0 +1,83 @@
+package ${package}.service;
+
+import ${package}.entity.${table.upperStartClassName};
+import ${package}.dao.${table.upperStartClassName}Dao;
+import com.youngo.exception.ErrcodeRuntimeException;
+import com.youngo.utils.Pagination;
+import com.youngo.utils.Result;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service("${table.lowerStartClassName}Service")
+public class ${table.upperStartClassName}Service {
+    
+    private static final Logger logger=Logger.getLogger(${table.upperStartClassName}Service.class);
+
+    @Autowired
+    private ${table.upperStartClassName}Dao ${table.lowerStartClassName}Dao;
+
+<% if(table.pk != null) { %>
+    public ${table.upperStartClassName } get(${table.pk.javaType} ${table.pk.lowerStartFieldName}){
+        return ${table.lowerStartClassName}Dao.getById(${table.pk.lowerStartFieldName});
+    }
+
+    public int delete(String[] ids){
+<%     for(eachLink in table.linkBys) {%>
+        if(${table.lowerStartClassName}Dao.linked${eachLink.from.tableTrans.upperStartClassName}(ids) > 0){
+            throw new ErrcodeRuntimeException(ErrcodeRuntimeException.BUSINESS_ERR,"该数据已被[${eachLink.from.tableTrans.remark}]引用，不能删除");
+        }
+<%     } %>
+        return ${table.lowerStartClassName}Dao.deleteById(ids);
+    }
+
+    public int enable(String enable,String[] ids){
+        Map<String, Object> params = new HashMap();
+        params.put("validFlag",enable);
+        params.put("${table.pk.lowerStartFieldName}s",ids);
+       return ${table.lowerStartClassName}Dao.flagBatchId(params);
+    }
+
+    public int update(final ${table.upperStartClassName } entity){
+        return ${table.lowerStartClassName}Dao.updateByEntity(entity);
+    }
+
+    public int batchUpdate(List<${table.upperStartClassName }> entity){
+        return ${table.lowerStartClassName}Dao.batchUpdateByEntity(entity);
+    }
+<% } %>
+
+    public int add(final ${table.upperStartClassName } entity){
+        return ${table.lowerStartClassName}Dao.insert(entity);
+    }
+
+    public int batchAdd(final List<${table.upperStartClassName }> list){
+        return ${table.lowerStartClassName}Dao.batchInsert(list);
+    }
+
+    public List<${table.upperStartClassName }> list(final Map<String, Object> params){
+        return ${table.lowerStartClassName}Dao.list(params);
+    }
+
+    public List<Map<String, String>> dict(Map<String, Object> params){
+        return ${table.lowerStartClassName}Dao.dict(params);
+    }
+
+    public Pagination page(Map<String, Object> params,int page,int pageSize){
+        if (page < 1){
+            page = 1;
+        }
+        if (pageSize < 1){
+            pageSize = 1;
+        }
+        params.put("start",pageSize * (page -1));
+        params.put("length",pageSize);
+
+        return new Pagination(${table.lowerStartClassName}Dao.list(params),${table.lowerStartClassName}Dao.count(params),page,pageSize);
+    }
+
+}

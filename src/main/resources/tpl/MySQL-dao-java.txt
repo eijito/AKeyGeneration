@@ -1,0 +1,78 @@
+package ${package}.dao;
+
+import ${package}.entity.${table.upperStartClassName };
+<%     for(eachLink in table.linkBys) {
+       var fromTable = eachLink.fromTableTrans;
+    var anotherCol = null;
+    if(fromTable.pk != null) {
+        anotherCol = fromTable.pk;
+    } else if(fromTable.columns.~size == 2){
+        anotherCol = (eachLink.from.name == fromTable.columns[0].name)?fromTable.columns[1]:fromTable.columns[0];
+    } else if(fromTable.links.~size == 2){
+          anotherCol = (eachLink.from.name == fromTable.links[0].from.name)?fromTable.links[1].from:fromTable.links[0].from;
+      }
+
+    if(anotherCol != null){
+%>
+import ${package}.entity.${fromTable.upperStartClassName };
+    <%     } %>
+<%     } %>
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import java.util.Map;
+import java.util.List;
+import java.io.Serializable;
+
+@Mapper
+public interface ${table.upperStartClassName }Dao extends Serializable{
+
+<% if(table.pk != null) { %>
+    ${table.upperStartClassName } getById(final ${table.pk.javaType} ${table.pk.lowerStartFieldName});
+
+    int deleteById(String[] ids);
+
+    int flagBatchId(Map<String, Object> params);
+
+    int updateByEntity(final ${table.upperStartClassName } entity);
+
+    int batchUpdateByEntity(List<${table.upperStartClassName }> entity);
+<% } %>
+
+    int insert(final ${table.upperStartClassName } entity);
+
+    int batchInsert(final List<${table.upperStartClassName }> list);
+
+    List<${table.upperStartClassName }> list(final Map<String, Object> params);
+
+    long count(final Map<String, Object> params);
+
+    List<Map<String, String>> dict(Map<String, Object> params);
+
+<%     for(eachLink in table.linkBys) {
+       var fromTable = eachLink.fromTableTrans;%>
+
+    /** linked table [${eachLink.from.tableTrans.name}] start */
+    long linked${eachLink.from.tableTrans.upperStartClassName}(@Param("${eachLink.from.lowerStartFieldName}s") String[] ${eachLink.from.lowerStartFieldName}s);
+    long deleteLinked${eachLink.from.tableTrans.upperStartClassName}(@Param("${eachLink.from.lowerStartFieldName}s") String[] ${eachLink.from.lowerStartFieldName}s);
+<%
+    var anotherCol = null;
+    if(fromTable.pk != null) {
+        anotherCol = fromTable.pk;
+    } else if(fromTable.columns.~size == 2){
+        anotherCol = (eachLink.from.name == fromTable.columns[0].name)?fromTable.columns[1]:fromTable.columns[0];
+    } else if(fromTable.links.~size == 2){
+          anotherCol = (eachLink.from.name == fromTable.links[0].from.name)?fromTable.links[1].from:fromTable.links[0].from;
+      }
+
+    if(anotherCol != null){
+%>
+
+    int deleteBeyond${fromTable.upperStartClassName}(@Param("${eachLink.from.lowerStartFieldName}") ${eachLink.from.javaType} ${eachLink.from.lowerStartFieldName}, @Param("${fromTable.lowerStartClassName }s") List<${fromTable.upperStartClassName }> ${fromTable.lowerStartClassName }s);
+    int insert${fromTable.upperStartClassName}IfMiss(List<${fromTable.upperStartClassName }> list);
+    int update${fromTable.upperStartClassName}IfExist(List<${fromTable.upperStartClassName }> list);
+    <%     } %>
+    /** linked table [${eachLink.from.tableTrans.name}] end */
+<%     } %>
+
+}

@@ -1,0 +1,76 @@
+package ${package}.entity;
+
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.youngo.utils.DateFormat;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.math.BigDecimal;
+
+@ApiModel(value = "${table.remark}")
+public class ${table.upperStartClassName} implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	<% for(key in table.keys) { %>
+    @ApiModelProperty(value = "${key.remarks}")
+    private ${key.javaType} ${key.lowerStartFieldName};
+	<% } %>
+    
+    <% for(each in table.columns) { %>
+	@ApiModelProperty(value = "${each.remarks}")
+	<% if("Date" == each.javaType) { %>
+	@JsonSerialize(using=DateFormat.Serializer_yyyy_MM_dd_HH_mm_ss.class)
+    @JsonDeserialize(using=DateFormat.Deserializer_yyyy_MM_dd_HH_mm_ss.class)
+    <% } %>
+    private ${each.javaType} ${each.lowerStartFieldName};
+    <% } %>
+<%for(eachColumn in table.linkBys) {
+        var fromTable = eachColumn.fromTableTrans; %>
+
+    @ApiModelProperty(value = "${fromTable.remark}")
+    private List<${fromTable.upperStartClassName }> ${fromTable.lowerStartClassName }List=new ArrayList<${fromTable.upperStartClassName }>(0);
+<%}%>
+    
+    <% for(key in table.keys) { %>
+    public ${key.javaType} get${key.upperStartFieldName}() {
+        return this.${key.lowerStartFieldName};
+    }
+    
+    public void set${key.upperStartFieldName}(${key.javaType} ${key.lowerStartFieldName}) {
+        this.${key.lowerStartFieldName} = ${key.lowerStartFieldName};
+    }
+    <%}%>
+
+    <% for(each in table.columns) { %>
+    public ${each.javaType} get${each.upperStartFieldName}() {
+        return this.${each.lowerStartFieldName};
+    }
+
+    public void set${each.upperStartFieldName}(${each.javaType} ${each.lowerStartFieldName}) {
+        this.${each.lowerStartFieldName} = ${each.lowerStartFieldName};
+    }
+    <%}%>
+    
+	<%for(eachColumn in table.linkBys) {
+           var fromTable = eachColumn.fromTableTrans; %>
+    public List<${fromTable.upperStartClassName }> get${fromTable.upperStartClassName }List() {
+        return this.${fromTable.lowerStartClassName }List;
+    }
+    
+    public void set${fromTable.upperStartClassName }List(List<${fromTable.upperStartClassName }> ${fromTable.lowerStartClassName }List) {
+        this.${fromTable.lowerStartClassName }List = ${fromTable.lowerStartClassName }List;
+    }
+	<%}%>
+
+	@Override
+	public String toString() {
+		return JSONObject.toJSONString(this);
+	}
+}

@@ -1,0 +1,93 @@
+package com.chn.mybatis.gen.base;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
+
+public abstract class BaseService<T extends BaseEntity<PK , T>, PK extends Serializable> {
+
+	/**
+	 * 子类需要实现该方法，提供注入的dao
+	 */
+	public abstract MybatisDao<T, PK> getEntityDao();
+
+	public T get(final PK id) {
+		return getEntityDao().get(id);
+	}
+
+	public int insert(final T entity) {
+		return getEntityDao().insert(entity);
+	}
+
+	public int insertBatch(final List<T> list) {
+		return getEntityDao().insertBatch(list);
+	}
+
+	int deleteById(PK id){
+		return getEntityDao().deleteById(id);
+	}
+
+	public int update(final Map<String, Object> params) {
+		return getEntityDao().update(params);
+	}
+
+	public int remove(final Map<String, Object> params) {
+		return getEntityDao().remove(params);
+	}
+
+	public List<T> find(final Map<String, Object> params) {
+		return getEntityDao().find(params);
+	}
+
+	public long count(final Map<String, Object> params) {
+		return getEntityDao().count(params);
+	}
+
+	public long countByEntity(final T entity) {
+		return getEntityDao().countByEntity(entity);
+	}
+
+	public int updateByEntity(final T entity) {
+		return getEntityDao().updateByEntity(entity);
+	}
+
+	public int removeByEntity(final T entity) {
+		return getEntityDao().removeByEntity(entity);
+	}
+
+	public List<T> findByEntity(final T entity) {
+		return getEntityDao().findByEntity(entity);
+	}
+
+	public Page<T> page(Map<String, Object> params) {
+		long count = getEntityDao().count(params);
+		int limitStart = Objects.strToInt(params.get(MagicConstants.LIMIT_START).toString(), 0);
+		int limitEnd = Objects.strToInt(params.get(MagicConstants.LIMIT_END).toString(), 0);
+		Page<T> dPageTest = new Page<T>(limitStart, limitEnd);
+		dPageTest.setData(getEntityDao().find(params));
+		dPageTest.setTotalCount(count);
+		return dPageTest;
+	}
+
+	public T findOne(final T entity) {
+		entity.setLimitStart(0);
+		entity.setLimitEnd(1);
+		List<T> datas = getEntityDao().findByEntity(entity);
+		if (datas != null && datas.size() > 0) {
+			return datas.get(0);
+		}
+		return null;
+	}
+	
+	public T findOne(Map<String, Object> params) {
+		params.put(MagicConstants.LIMIT_START, 0);
+		params.put(MagicConstants.LIMIT_END, 1);
+		List<T> datas = getEntityDao().find(params);
+		if (datas != null && datas.size() > 0) {
+			return datas.get(0);
+		}
+		return null;
+	}
+
+}
